@@ -1,31 +1,9 @@
 # Real-time data pipeline using apache kafka 
 
 ## [STEP 0] Prerequisite
-- 실습에 필요한 라이브러리 설치
 ### Java 설치 및 JAVA_HOME 설정
-```
-> sudo yum install -y java
-
-# 현재 OS 설정이 한글인지 영어인지 확인한다. 
-> alternatives --display java
-
-# 아래와 같이 출력되면 한글임. 
-슬레이브 unpack200.1.gz: /usr/share/man/man1/unpack200-java-1.8.0-openjdk-1.8.0.312.b07-1.el7_9.x86_64.1.gz
-현재 '최고' 버전은 /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.312.b07-1.el7_9.x86_64/jre/bin/java입니다.
-
-### 한글인 경우 
-> alternatives --display java | grep '현재 /'| sed "s/현재 //" | sed 's|/bin/java로 링크되어 있습니다||'
-> export JAVA_HOME=$(alternatives --display java | grep '현재 /'| sed "s/현재 //" | sed 's|/bin/java로 링크되어 있습니다||')
-
-### 영문인 경우
-> alternatives --display java | grep current | sed 's/link currently points to //' | sed 's|/bin/java||' | sed 's/^ //g'
-> export JAVA_HOME=$(alternatives --display java | grep current | sed 's/link currently points to //' | sed 's|/bin/java||' | sed 's/^ //g')
-
-# 제대로 java 경로가 설정되었는지 확인
-> echo $JAVA_HOME
-> echo "export JAVA_HOME=$JAVA_HOME" >> ~/.bash_profile
-> source ~/.bash_profile
-```
+- kafka_basic/README.md에 명시된 가이드에 따라서
+- java 설치 및 JAVA_HOME 설정
 
 
 ## [STEP 1] Install ELK Stack (Elasticsearch + Logstash + Kibana)
@@ -38,79 +16,28 @@
         - elastic사도 OSS를 이용해서 basic 제품을 개발하고, 이를 무료로 제공함. 
         - 하지만, basic 버전의 소유권은 elastic사에 귀속됨(무로지만, 이를 이용해 비즈니스/사업을 하면 안됨)
     - http://kimjmin.net/2020/06/2020-06-elastic-devrel/
+- Elastic stack 설치
+  - - https://www.elastic.co/guide/en/elastic-stack/current/installing-elastic-stack.html 참고
 
-### Install an Elasticsearch 
-- https://www.elastic.co/guide/en/elastic-stack/current/installing-elastic-stack.html 참고
-```
-> cd ~/apps
-> wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.10.1-linux-x86_64.tar.gz
-> tar -xzf elasticsearch-7.10.1-linux-x86_64.tar.gz
-```
+### 1) Install an Elasticsearch 
 - config 설정 
     - 외부 접속 허용(network.host) : server와 client가 다른 ip가 있을 경우, 외부에서 접속할 수 있도록 설정을 추가해야함.
-    - master host 설정 (cluster.initial_master_nodes) : Master Node의 후보를 명시하여, Master Node 다운시 새로운 Master로 선출한다.
 ```
-> cd ~/apps/elasticsearch-7.10.1
+> cd ~/apps
+> wget wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.14.1-linux-x86_64.tar.gz
+> tar -xzf elasticsearch-8.14.1-linux-x86_64.tar.gz
+> cd ~/apps/elasticsearch-8.14.1
 > vi config/elasticsearch.yml
 # bind ip to connect from client  (lan이 여러개 있을 경우 외부에서 접속할 ip를 지정할 수 있음.)
 # bind all ip server have "0.0.0.0"
-
 network.host: 0.0.0.0   #(":" 다음에 스페이스를 추가해야 함.)
 
-# Master Node의 후보 서버 목록을 적어준다. (여기서는 1대 이므로 본인의 IP만)
-# ip를 입력하면 
-cluster.initial_master_nodes: ["서버이름"]
+# kibana에서 보안정책 없이 접근 가능하도록 "false"로 변경
+xpack.security.enabled: false
+
 ```
 
-#### Error 발생 (cluster.initial_master_nodes에 IP를 입력한 경우)
-- 에러 로그 유형
-    - skipping cluster bootstrapping as local node does not match bootstrap requirements: [34.64.85.55]
-    - master not discovered yet, this node has not previously joined a bootstrapped (v7+) cluster, and [cluster.initial_master_nodes] is empty on this node
-- 해결
-    - cluster.initial_master_nodes: ["broker01"] 입력 
-
-#### run elasticsearch 
-```
-> cd ~/apps/elasticsearch-7.10.1
-> bin/elasticsearch
-
-# 아래와 같은 에러가 발생함. 
-ERROR: [3] bootstrap checks failed
-[1]: max file descriptors [4096] for elasticsearch process is too low, increase to at least [65535]
-[2]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
-ERROR: Elasticsearch did not exit normally - check the logs at /home/freepsw/apps/elasticsearch-7.10.1/logs/elasticsearch.log
-[2020-12-14T08:16:54,358][INFO ][o.e.n.Node               ] [freepsw-test] stopping ...
-[2020-12-14T08:16:54,395][INFO ][o.e.n.Node               ] [freepsw-test] stopped
-[2020-12-14T08:16:54,395][INFO ][o.e.n.Node               ] [freepsw-test] closing ...
-[2020-12-14T08:16:54,431][INFO ][o.e.n.Node               ] [freepsw-test] closed
-```
-- Elasticsearch를 실행하기 위해서 필요한 OS 설정이 충족되지 못하여 발생하는 오류 (이를 해결하기 위한 설정 변경)
-#### 오류1) File Descriptor 오류 해결
-- file descriptor 갯수를 증가시켜야 한다.
-- 에러 : [1]: max file descriptors [4096] for elasticsearch process is too low, increase to at least [65536]
-- https://www.elastic.co/guide/en/elasticsearch/reference/current/setting-system-settings.html#limits.conf
-```
-> sudo vi /etc/security/limits.conf
-# 아래 내용 추가 
-* hard nofile 70000
-* soft nofile 70000
-root hard nofile 70000
-root soft nofile 70000
-
-# 적용을 위해 콘솔을 닫고 다시 연결한다. (console 재접속)
-# 적용되었는지 확인
-> ulimit -a
-core file size          (blocks, -c) 0
-data seg size           (kbytes, -d) unlimited
-scheduling priority             (-e) 0
-file size               (blocks, -f) unlimited
-pending signals                 (-i) 59450
-max locked memory       (kbytes, -l) 64
-max memory size         (kbytes, -m) unlimited
-open files                      (-n) 70000  #--> 정상적으로 적용됨을 확인함
-```
-
-#### 오류2) virtual memory error 해결
+#### 오류 해결 : virtual memory error
 - 시스템의 nmap count를 증가기켜야 한다.
 - 에러 : [2]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
 - https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
@@ -138,38 +65,104 @@ vm.max_map_count = 262144
 vm.max_map_count = 262144
 ```
 
-- rerun elasticsearch 
+
+#### Run elasticsearch
 ```
-> cd ~/apps/elasticsearch-7.10.1
-> bin/elasticsearch
-......
-[2020-12-14T10:18:18,803][INFO ][o.e.l.LicenseService     ] [freepsw-test] license [944a4695-3ec0-41f1-b3f8-5752b71c759e] mode [basic] - valid
-[2020-12-14T10:18:18,806][INFO ][o.e.x.s.s.SecurityStatusChangeListener] [freepsw-test] Active license is now [BASIC]; Security is disabled
+> ./bin/elasticsearch
+....................
+[2024-07-02T12:41:39,687][INFO ][o.e.l.ClusterStateLicenseService] [instance-20240701-162846] license [2ce86f9d-ae5b-47c0-815a-35e4ad0d9ae2] mode [basic] - valid
+[2024-07-02T12:41:46,485][INFO ][o.e.x.s.InitialNodeSecurityAutoConfiguration] [instance-20240701-162846] HTTPS has been configured with automatically generated certificates, and the CA's hex-encoded SHA-256 fingerprint is [6500b8c8df356e4965da2f1692d8569a4e3058f04522f945fd699b76d5c81c64]
+[2024-07-02T12:41:46,489][INFO ][o.e.x.s.s.SecurityIndexManager] [instance-20240701-162846] security index does not exist, creating [.security-7] with alias [.security]
+[2024-07-02T12:41:46,506][INFO ][o.e.x.s.e.InternalEnrollmentTokenGenerator] [instance-20240701-162846] Will not generate node enrollment token because node is only bound on localhost for transport and cannot connect to nodes from other hosts
+[2024-07-02T12:41:46,559][INFO ][o.e.c.m.MetadataCreateIndexService] [instance-20240701-162846] [.security-7] creating index, cause [api], templates [], shards [1]/[0]
+[2024-07-02T12:41:46,617][INFO ][o.e.x.s.s.SecurityIndexManager] [instance-20240701-162846] security index does not exist, creating [.security-7] with alias [.security]
+[2024-07-02T12:41:46,839][INFO ][o.e.c.r.a.AllocationService] [instance-20240701-162846] current.health="GREEN" message="Cluster health status changed from [YELLOW] to [GREEN] (reason: [shards started [[.security-7][0]]])." previous.health="YELLOW" reason="shards started [[.security-7][0]]"
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Elasticsearch security features have been automatically configured!
+✅ Authentication is enabled and cluster connections are encrypted.
+
+ℹ️  Password for the elastic user (reset with `bin/elasticsearch-reset-password -u elastic`):
+  ZG73I6D*OjUTT06oqZ4h
+
+ℹ️  HTTP CA certificate SHA-256 fingerprint:
+  6500b8c8df356e4965da2f1692d8569a4e3058f04522f945fd699b76d5c81c64
+
+ℹ️  Configure Kibana to use this cluster:
+• Run Kibana and click the configuration link in the terminal when Kibana starts.
+• Copy the following enrollment token and paste it into Kibana in your browser (valid for the next 30 minutes):
+  eyJ2ZXIiOiI4LjE0LjAiLCJhZHIiOlsiMTAuMTc4LjAuNDo5MjAwIl0sImZnciI6IjY1MDBiOGM4ZGYzNTZlNDk2NWRhMmYxNjkyZDg1NjlhNGUzMDU4ZjA0NTIyZjk0NWZkNjk5Yjc2ZDVjODFjNjQiLCJrZXkiOiJSc1YzYzVBQk5JX1ppY3hPSlk5RjpjdGtUUWcwc1NidWpxX2wxTU5uVlBBIn0=
+
+ℹ️  Configure other nodes to join this cluster:
+• On this node:
+  ⁃ Create an enrollment token with `bin/elasticsearch-create-enrollment-token -s node`.
+  ⁃ Uncomment the transport.host setting at the end of config/elasticsearch.yml.
+  ⁃ Restart Elasticsearch.
+• On other nodes:
+  ⁃ Start Elasticsearch with `bin/elasticsearch --enrollment-token <token>`, using the enrollment token that you generated.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ```
 
-#### Elasticsearch UI로 접속하기 
-- 1) 웹브라우저에서 접속 확인 
-    - http://VM외부IP:9200
-- 2) Elasticsearch용 시각화 plugin(elasticsearch head) 설치 (구글 크롬 브라우저)
-    - https://chrome.google.com/webstore/detail/elasticsearch-head/ffmkiejjmecolpfloofpjologoblkegm
-    - "Chrome에 추가" 클릭
-    - 추가된 Plugin 클릭하여 접속 > "Elasticsearch 설치된 IP입력" > Connect 버튼 클릭
+#### Check elasticsearch is running
+- Console을 이용한 접근
+```
+> export ELASTIC_PASSWORD="ZG73I6D*OjUTT06oqZ4h"
+
+> curl --cacert ~/apps/elasticsearch-8.14.1/config/certs/http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200 
+{
+  "name" : "instance-20240701-162846",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "BjsJfIIxSQySPV90paP3TQ",
+  "version" : {
+    "number" : "8.14.1",
+    "build_flavor" : "default",
+    "build_type" : "tar",
+    "build_hash" : "93a57a1a76f556d8aee6a90d1a95b06187501310",
+    "build_date" : "2024-06-10T23:35:17.114581191Z",
+    "build_snapshot" : false,
+    "lucene_version" : "9.10.0",
+    "minimum_wire_compatibility_version" : "7.17.0",
+    "minimum_index_compatibility_version" : "7.0.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+## 아래와 같은 방법으로 접근도 가능함
+> curl -k -v -u elastic https://34.64.166.195:9200
+Enter host password for user 'elastic': ZG73I6D*OjUTT06oqZ4h
+```
+
+- Web Browser를 이용한 접근
+  - Web brower 주소 창에서 "https://Elastic-server-ip:9200/" 입력
+  - 팝업 창에서 user/password를 elastid/위에서 저장한 password 로 입력
+  - web에서 elasticsearch 정보 확인
 
 
-### Install and run a kibana 
+
+### 2) Install and run a kibana 
 ```
 > cd ~/apps
-> curl -O https://artifacts.elastic.co/downloads/kibana/kibana-7.10.1-linux-x86_64.tar.gz
-> tar -xzf kibana-7.10.1-linux-x86_64.tar.gz
-> cd kibana-7.10.1-linux-x86_64/
+> curl -O https://artifacts.elastic.co/downloads/kibana/kibana-8.14.1-linux-x86_64.tar.gz
+> tar -xzf kibana-8.14.1-linux-x86_64.tar.gz
+> cd ~/apps/kibana-8.14.1/
+```
 
-# 외부 접속 가능하도록 설정 값 변경 
-# 외부의 어떤 IP에서도 접속 가능하도록 0.0.0.0으로 변경 (운영환경에서는 특정 ip대역만 지정하여 보안강화)
-> vi config/kibana.yml
+#### Kibana 설정 변경
+- 외부 접속 가능하도록 설정 값 변경 
+  - 외부의 어떤 IP에서도 접속 가능하도록 0.0.0.0으로 변경 (운영환경에서는 특정 ip대역만 지정하여 보안강화)
+- elasticsearch 접속을 위한 user/password 설정
+```
+>  
+# 외부에서 접근 가능하도록 설정 
 server.host: "0.0.0.0"
 
+```
 
-> cd ~/apps/kibana-7.10.1-linux-x86_64/
+#### Run kibana
+```
+> cd ~/apps/kibana-8.14.1/ 
 > bin/kibana
 .....
   log   [10:40:10.296] [info][server][Kibana][http] http server running at http://localhost:5601
@@ -185,29 +178,37 @@ curl -XDELETE http://localhost:9200/.kibana_1
 ```
 
 
-### Install a logstash 
+### 3) Install a logstash 
 ```
 > cd ~/apps
-> wget https://artifacts.elastic.co/downloads/logstash/logstash-7.10.1-linux-x86_64.tar.gz
-> tar xvf logstash-7.10.1-linux-x86_64.tar.gz
-> cd logstash-7.10.1
+> wget https://artifacts.elastic.co/downloads/logstash/logstash-8.14.1-linux-x86_64.tar.gz
+> tar xvf logstash-8.14.1-linux-x86_64.tar.gz
+> cd ~/apps/logstash-8.14.1
 ```
-- Test a logstash 
+
+#### Test a logstash 
 ```
 > bin/logstash -e 'input { stdin { } } output { stdout {} }'
 # 실행까지 시간이 소요된다. (아래 메세지가 출력되면 정상 실행된 것으로 확인)
 .........
+[2024-07-02T15:42:37,938][INFO ][logstash.javapipeline    ][main] Pipeline started {"pipeline.id"=>"main"}
 The stdin plugin is now waiting for input:
-[2020-12-20T08:20:58,728][INFO ][logstash.agent           ] Pipelines running {:count=>1, :running_pipelines=>[:main], :non_running_pipelines=>[]}
-[2020-12-20T08:20:59,146][INFO ][logstash.agent           ] Successfully started Logstash API endpoint {:port=>9600}
+[2024-07-02T15:42:37,953][INFO ][logstash.agent           ] Pipelines running {:count=>1, :running_pipelines=>[:main], :non_running_pipelines=>[]}
+
 mytest  <-- 메세지 입력 후 아래와 같이 출력되면 정상적으로 설치된 것
 {
-       "message" => "mytest",
-      "@version" => "1",
-          "host" => "freepsw-test",
-    "@timestamp" => 2020-12-14T10:51:12.408Z
+    "host" => {
+        "hostname" => "instance-20240701-162846"
+    },
+    "event" => {
+        "original" => "mytest"
+    },
+    "@version" => "1",
+    "message" => "mytest",
+    "@timestamp" => 2024-07-02T15:44:03.085998069Z
 }
 ```
+
 
 
 ## [STEP 2] Configure kafka topic 
