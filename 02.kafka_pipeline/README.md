@@ -216,12 +216,15 @@ mytest  <-- 메세지 입력 후 아래와 같이 출력되면 정상적으로 �
 ### Step 1: Create a topic (realtime)
 - 실습에 사용할 topic을 생성한다. 
 ```
-> cd ~/apps/kafka_2.12-3.0.0
+> cd ~/apps/kafka_2.12-3.6.2
 
 > bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic realtime
 
 # check created topic "realtime"
 > bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+__consumer_offsets
+kv_topic
+mytopic
 realtime
 ```
 
@@ -235,7 +238,7 @@ This is another message
 
 ### Step 3: Start a consumer
 ```
-> cd ~/apps/kafka_2.12-3.0.0
+> cd ~/apps/kafka_2.12-3.6.2
 > bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic realtime --from-beginning
 
 This is a message
@@ -249,12 +252,14 @@ This is another message
 ```
 > cd ~/apps
 > wget https://github.com/freepsw/demo-spark-analytics/raw/master/00.stage1/tracks.csv
+> touch tracks_live.csv
 ```
 ### Run logstash 
 - kafka topic을 realtime로 변경
 ```
 > vi ~/apps/producer.conf
 ```
+- 아래 path의 경로를 다운로드 받은 파일의 경로로 변경
 ```yaml
 input {
   file {
@@ -281,7 +286,9 @@ output {
 - run logstash 
 ```
 > cd ~/apps/
-> ~/apps/logstash-7.10.1/bin/logstash -f producer.conf
+> ~/apps/logstash-8.14.1/bin/logstash -f ~/apps/producer.conf
+.....
+[2024-07-02T16:06:52,012][INFO ][logstash.agent           ] Pipelines running {:count=>1, :running_pipelines=>[:main], :non_running_pipelines=>[]}
 ```
 
 
@@ -341,7 +348,7 @@ finally:
 - logstash에서 kafka로 정상적으로 메세지가 전송되고 있는지 모니터링
 - 아래의 kafka-console-consumer 명령어를 통해 전송되는 메세지를 확인
 ```
-> cd ~/apps/kafka_2.12-3.0.0
+> cd ~/apps/kafka_2.12-3.6.2
 > bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic realtime
 # logstash에서 정상적으로 메세지를 보내면, 아래와 같은 메세지가 출력될 것임.
 0,48,453,"2014-10-23 03:26:20",0,"72132"
@@ -392,16 +399,10 @@ output {
 ### run logstash consumer 
 ```
 > cd ~/apps
-> ~/apps/logstash-7.10.1/bin/logstash --path.data ~/apps/consumer-data -f consumer.conf
+> ~/apps/logstash-8.14.1/bin/logstash --path.data ~/apps/consumer-data -f ~/apps/consumer.conf
 ```
 
-
 ## [STEP 6] Kibana로 실시간 유입 데이터 확인
-### Elastic Chrome Extension으로 데이터 저장여부 확인 
-- Elasticsearch용 시각화 plugin(elasticsearch head) 설치 (구글 크롬 브라우저)
-    - https://chrome.google.com/webstore/detail/elasticsearch-head/ffmkiejjmecolpfloofpjologoblkegm
-    - "Chrome에 추가" 클릭
-    - 추가된 Plugin 클릭하여 접속 > "Elasticsearch 설치된 IP입력" > Connect 버튼 클릭
 ### Kibana Web Browser에서 접속하여 데이터 확인
 - http://vm-instance-ip:5601 
 
