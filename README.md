@@ -13,10 +13,6 @@ openjdk version "17.0.6" 2023-01-17 LTS
 OpenJDK Runtime Environment (Red_Hat-17.0.6.0.10-3.el9) (build 17.0.6+10-LTS)
 OpenJDK 64-Bit Server VM (Red_Hat-17.0.6.0.10-3.el9) (build 17.0.6+10-LTS, mixed mode, sharing)
 
-# java home 경로 확인
-> ls /usr/lib/jvm/jre-17-openjdk
-bin  conf  include  legal  lib  release  tapset
-
 # JAVA_HOME 설정
 > echo 'export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))' | sudo tee -a /etc/profile
 

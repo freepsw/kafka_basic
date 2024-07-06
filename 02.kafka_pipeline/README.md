@@ -31,10 +31,8 @@
 # bind ip to connect from client  (lan이 여러개 있을 경우 외부에서 접속할 ip를 지정할 수 있음.)
 # bind all ip server have "0.0.0.0"
 network.host: 0.0.0.0   #(":" 다음에 스페이스를 추가해야 함.)
-
 # kibana에서 보안정책 없이 접근 가능하도록 "false"로 변경
 xpack.security.enabled: false
-
 ```
 
 #### 오류 해결 : virtual memory error
@@ -154,10 +152,9 @@ Enter host password for user 'elastic': ZG73I6D*OjUTT06oqZ4h
   - 외부의 어떤 IP에서도 접속 가능하도록 0.0.0.0으로 변경 (운영환경에서는 특정 ip대역만 지정하여 보안강화)
 - elasticsearch 접속을 위한 user/password 설정
 ```
->  
+> vi config/kibana.yml
 # 외부에서 접근 가능하도록 설정 
 server.host: "0.0.0.0"
-
 ```
 
 #### Run kibana
@@ -177,6 +174,9 @@ curl -XDELETE http://localhost:9200/.kibana_2
 curl -XDELETE http://localhost:9200/.kibana_1
 ```
 
+#### Kibana Web UI 접급
+- Web Browser를 이용한 접근
+  - Web brower 주소 창에서 "http://Elastic-server-ip:5601/" 입력
 
 ### 3) Install a logstash 
 ```
@@ -209,10 +209,7 @@ mytest  <-- 메세지 입력 후 아래와 같이 출력되면 정상적으로 �
 }
 ```
 
-
-
 ## [STEP 2] Configure kafka topic 
-
 ### Step 1: Create a topic (realtime)
 - 실습에 사용할 topic을 생성한다. 
 ```
