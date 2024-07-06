@@ -26,6 +26,10 @@ public class Consumer_Commit_Async {
             for (ConsumerRecord<String, String> record : records) {
                 System.out.println(record);
             }
+
+            // Commit 후 결과를 기다리지 않고, 다음 메세지를 처리하는 방식
+            // Commit 결과를 기다리는 시간이 없기 때문에, 더 많은 메세지를 처리할 수 있음
+            // 다만, commit이 실패하는 경우, 이전 데이터를 다시 읽어오는 과정에서 중복이 발생할 수 있음
             consumer.commitAsync(new OffsetCommitCallback() {
                 public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception e) {
                     if (e != null)

@@ -17,8 +17,7 @@ if __name__ == '__main__':
     p = Producer(**conf)
 
     # Optional per-message delivery callback (triggered by poll() or flush())
-    # when a message has been successfully delivered or permanently
-    # failed delivery (after retries).
+    # Producer에서 메세지를 정상적으로 전달했거나, 최종 실패한 경우 deliver_callbak 함수를 실행함. 
     def delivery_callback(err, msg):
         if err:
             sys.stderr.write('%% Message failed delivery: %s\n' % err)
@@ -29,7 +28,7 @@ if __name__ == '__main__':
     # Read lines from stdin, produce each line to Kafka
     for line in sys.stdin:
         try:
-            # Produce line (without newline)
+            # Produce line (without newline, rstrip()함수로 우축 공백 제거)
             p.produce(topic, line.rstrip(), callback=delivery_callback)
 
         except BufferError:
@@ -39,7 +38,7 @@ if __name__ == '__main__':
         # Serve delivery callback queue.
         # NOTE: Since produce() is an asynchronous API this poll() call
         #       will most likely not serve the delivery callback for the
-        #       last produce()d message.
+        #       last produced message.
         p.poll(0)
 
     # Wait until all messages have been delivered

@@ -27,7 +27,8 @@ public class Consumer_Commit_Sync_Offset {
 
             for (ConsumerRecord<String, String> record : records) {
                 System.out.println(record);
-                // commit offset
+
+                // 사용자가 직접 partition별 offset 값을 지정하여 commit 하는 방식
                 currentOffset.put(
                         new TopicPartition(record.topic(), record.partition()),
                         new OffsetAndMetadata(record.offset() + 1, null));

@@ -2,12 +2,11 @@ from confluent_kafka.admin import AdminClient, NewTopic
 
 a = AdminClient({'bootstrap.servers': 'localhost'})
 
+# 새롭게 생성할 topic에 대한 상세 설정 및 생성할 topic 명을 입력한다.
 new_topics = [NewTopic(topic, num_partitions=3, replication_factor=1) for topic in ["my_topic_new1", "my_topic_new2"]]
-# Note: In a multi-cluster production scenario, 
-# it is more typical to use a replication_factor of 3 for durability.
 
-# Call create_topics to asynchronously create topics. A dict
-# of <topic,future> is returned.
+
+# Call create_topics to asynchronously create topics. A dict of <topic,future> is returned.
 fs = a.create_topics(new_topics)
 
 # Wait for each operation to finish.

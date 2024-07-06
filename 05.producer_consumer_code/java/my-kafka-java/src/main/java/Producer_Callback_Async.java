@@ -17,6 +17,8 @@ public class Producer_Callback_Async {
 
         String msg = "Async producer message";
         ProducerRecord<String, String> record = new ProducerRecord<>("my_topic", msg);
+
+        // ASync 방식으로 callback 함수를 사용 
         producer.send(record, (recordMetadata, exception) -> {
             if (exception == null) {
                 System.out.println("Record written to offset " +

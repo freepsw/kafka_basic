@@ -15,9 +15,11 @@ public class Consumer_Commit_Auto {
         configs.put(ConsumerConfig.GROUP_ID_CONFIG, "my-java-group");
         configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        // Add configuration for auto commit (Only this code)
+        
+        // Consumer가 자동으로 Auto commit을 실행하도록 설정
+        // 자동으로 commit하는 주기는 6초(6000)로 설정
         configs.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
-        configs.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 60000);
+        configs.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 6000);
 
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(configs);
 

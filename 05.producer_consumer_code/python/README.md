@@ -98,13 +98,14 @@ my_topic_new2
 ```
 
 ## Advanced Producer/Consumer/Admin code 
-### Consumer  code
+### Advanced Consumer code
 ```
 > cd ~/python_kafka 
 > source kafka_virtualenv/bin/activate
 
 > vi consumer_detail.py 
 
+# 1). 통계정보 수집하지 않고 실행
 > python consumer_detail.py localhost my_group my_topic
 
 Assignment: [TopicPartition{topic=my_topic,partition=0,offset=-1001,error=None}, TopicPartition{topic=my_topic,partition=1,offset=-1001,error=None}]
@@ -118,6 +119,56 @@ b'test-msg'
 b'test-msg'
 % my_topic [0] at offset 0 with key None:
 b'test-msg'
+
+# Produce로 새로운 메세지 전송하여 새로운 정보 출력되는지 확인
+> cd ~/apps/kafka_2.12-3.6.2
+> bin/kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic
+>test-2
+>test-3
+
+# 2). 통계정보 수집하는 옵션을 추가하여 실행
+> python consumer_detail.py -T 10000 localhost my_group my_topic
+Assignment: [TopicPartition{topic=my_topic,partition=0,offset=-1001,leader_epoch=None,error=None}, TopicPartition{topic=my_topic,partition=1,offset=-1001,leader_epoch=None,error=None}]
+
+KAFKA Stats: {'age': 10000862,
+ 'brokers': {'GroupCoordinator': {'buf_grow': 0,
+                                  'connects': 1,
+                                  'disconnects': 0,
+                                  'int_latency': {'avg': 0,
+                                                  'cnt': 0,
+                                                  'hdrsize': 11376,
+                                                  'max': 0,
+                                                  'min': 0,
+                                                  'outofrange': 0,
+                                                  'p50': 0,
+                                                  'p75': 0,
+                                                  'p90': 0,
+                                                  'p95': 0,
+                                                  'p99': 0,
+                                                  'p99_99': 0,
+                                                  'stddev': 0,
+                                                  'sum': 0},
+                                  'name': 'GroupCoordinator',
+                                  'nodeid': 0,
+                                  'nodename': 'instance-20240701-162846.asia-northeast3-b.c.beaming-grid-428115-d6.internal:9092',
+                                  'outbuf_cnt': 0,
+                                  'outbuf_latency': {'avg': 49,
+                                                     'cnt': 10,
+                                                     'hdrsize': 11376,
+                                                     'max': 101,
+                                                     'min': 19,
+                                                     'outofrange': 0,
+                                                     'p50': 34,
+                                                     'p75': 86,
+                                                     'p90': 93,
+                                                     'p95': 101,
+                                                     'p99': 101,
+                                                     'p99_99': 101,
+                                                     'stddev': 29,
+                                                     'sum': 498},
+                                  'outbuf_msg_cnt': 0,
+......
+
 ```
 
 ### Producer code
@@ -128,13 +179,27 @@ b'test-msg'
 > vi producer_detail.py 
 
 > python producer_detail.py localhost my_topic
-new msg
-my msg
-% Message delivered to my_topic [0] @ 1
+my message
+second message
+% Message delivered to my_topic [1] @ 7
+third message
+% Message delivered to my_topic [1] @ 8
+4th message
+% Message delivered to my_topic [1] @ 9
 ```
 - consumer에서 정상적으로 수신하는지 확인한다. 
+```
+> cd ~/apps/kafka_2.12-3.6.2
+> bin/kafka_2.12-3.6.2bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic my_topic
+my message
+second message
+third message
+4th message
+
+```
 
 ### Producer Key/Value Code 
+- Key와 Value를 함께 전달하는 경우, Key값이 어떤 partition에 전달되는지 확인 가능
 ```
 > cd ~/python_kafka 
 > source kafka_virtualenv/bin/activate
@@ -144,9 +209,16 @@ my msg
 > python producer_key.py 
 
 > python producer_key.py
-Message delivered to my_topic [0]
-Message delivered to my_topic [0]
-Message delivered to my_topic [0]
+Message delivered to my_topic [0] key:b'jbernard'
+Message delivered to my_topic [0] key:b'eabara'
+Message delivered to my_topic [0] key:b'eabara'
+Message delivered to my_topic [0] key:b'eabara'
+Message delivered to my_topic [1] key:b'htanaka'
+Message delivered to my_topic [1] key:b'sgarcia'
+Message delivered to my_topic [1] key:b'jsmith'
+Message delivered to my_topic [1] key:b'awalther'
+Message delivered to my_topic [1] key:b'htanaka'
+Message delivered to my_topic [1] key:b'awalther
 .....
 ```
 

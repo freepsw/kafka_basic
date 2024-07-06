@@ -6,10 +6,13 @@ c = Consumer({
     'auto.offset.reset': 'earliest'
 })
 
+# Subscribe to topics
 c.subscribe(['my_topic'])
 
+# Read messages from Kafka, print to stdout
+# timeout : 메세지가 없는 경우 대기하는 최대 시간(second), -1인 경우 무한 대기
 while True:
-    msg = c.poll(1.0)
+    msg = c.poll(timeout=1.0)
 
     if msg is None:
         continue

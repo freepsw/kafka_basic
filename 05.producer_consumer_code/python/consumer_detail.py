@@ -5,6 +5,7 @@ import json
 import logging
 from pprint import pformat
 
+# Kafka Consumer에 대한 세부 통계정보를 출력하는 Callback 함수
 def stats_cb(stats_json_str):
     stats_json = json.loads(stats_json_str)
     print('\nKAFKA Stats: {}\n'.format(pformat(stats_json)))
@@ -26,12 +27,13 @@ if __name__ == '__main__':
     broker = argv[0]
     group = argv[1]
     topics = argv[2:]
-    # Consumer configuration
+
+    # Create Consumer instance
     # See https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
     conf = {'bootstrap.servers': broker, 'group.id': group, 'session.timeout.ms': 6000,
             'auto.offset.reset': 'earliest'}
 
-    # Check to see if -T option exists
+    # -T 옵션에 Check to see if -T option exists
     for opt in optlist:
         if opt[0] != '-T':
             continue
@@ -45,8 +47,10 @@ if __name__ == '__main__':
             sys.stderr.write("-T option value needs to be larger than zero: %s\n" % opt[1])
             sys.exit(1)
 
+        # Enable statistics via librdkafka's statistics callback
+        # Topic에 대한 통계정보 수집을 활성화함. (inval 단위로 수집)
         conf['stats_cb'] = stats_cb
-        conf['statistics.interval.ms'] = int(opt[1])
+        conf['statistics.interval.ms'] = intval
 
     # Create logger for consumer (logs will be emitted when poll() is called)
     logger = logging.getLogger('consumer')
@@ -62,7 +66,7 @@ if __name__ == '__main__':
     def print_assignment(consumer, partitions):
         print('Assignment:', partitions)
 
-    # Subscribe to topics
+    # Subscribe to topics (Topic이 할당되면 callback함수로 print_assignment 실행)
     c.subscribe(topics, on_assign=print_assignment)
 
     # Read messages from Kafka, print to stdout

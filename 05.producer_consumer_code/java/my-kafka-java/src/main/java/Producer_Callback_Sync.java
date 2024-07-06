@@ -18,6 +18,7 @@ public class Producer_Callback_Sync {
         ProducerRecord<String, String> record = new ProducerRecord<>("my_topic", msg);
 
         try {
+            // 메세지 전달결과를 기다렸다가 결과를 출력하는 Sync 방식
             RecordMetadata metadata = producer.send(record).get();
             System.out.println("Record written to offset " +
                     metadata.offset() + " timestamp " +
