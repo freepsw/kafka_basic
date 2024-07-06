@@ -4,13 +4,21 @@
 - https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#confluent-kafka-api
 
 
-## 개발환경 구성
+
+
+## 실습 환경 구성
 ```
+# Git에서 실습에 사용할 파일 다운로드
+> cd ~
+> sudo dnf install -y git
+> git clone https://github.com/freepsw/kafka_basic.git
+
+# python 실행에 필요한 코드 복사
 > mkdir ~/python_kafka
 > cd ~/python_kafka 
+> cp ~/kafka_basic/05.producer_consumer_code/python/*.py  ~/python_kafka/
 
 # python 3 가상환경 생성
-> sudo yum install -y python3 
 > python3 -m venv kafka_virtualenv
 
 ## 가상환경 실행하기 
@@ -19,14 +27,15 @@
 
 # kafka library 설치 
 > pip install --upgrade pip
-> pip install confluent-kafka==1.8.2  
+> pip install confluent-kafka
 ```
 
 ### kafka 환경 구성
 ### Create a topic
 ```
-> cd $KAFKA_HOME
+> cd ~/apps/kafka_2.12-3.6.2
 > bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 2 --topic my_topic
+> bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 ```
 
 ## Basic Producer/Consumer/Admin code 
@@ -47,6 +56,11 @@
 ## 메시지 전송 후 consumer에서 정상 수신하는지 확인 
 > python producer.py
 Message delivered to my_topic [1]
+
+## 이전에 실행한 Consumer에 아래와 같은 메세지 확인
+> bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic my_topic --from-beginning
+test-msg
+
 ```
 
 ### Basic Consumer Test 
