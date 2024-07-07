@@ -24,13 +24,17 @@
     - 외부 접속 허용(network.host) : server와 client가 다른 ip가 있을 경우, 외부에서 접속할 수 있도록 설정을 추가해야함.
 ```
 > cd ~/apps
-> wget wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.14.1-linux-x86_64.tar.gz
+> wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.14.1-linux-x86_64.tar.gz
 > tar -xzf elasticsearch-8.14.1-linux-x86_64.tar.gz
 > cd ~/apps/elasticsearch-8.14.1
 > vi config/elasticsearch.yml
+
 # bind ip to connect from client  (lan이 여러개 있을 경우 외부에서 접속할 ip를 지정할 수 있음.)
-# bind all ip server have "0.0.0.0"
 network.host: 0.0.0.0   #(":" 다음에 스페이스를 추가해야 함.)
+
+# Master Node의 후보 서버 목록을 적어준다. (여기서는 1대 이므로 본인의 IP만)
+cluster.initial_master_nodes: ["서버이름"]
+
 # kibana에서 보안정책 없이 접근 가능하도록 "false"로 변경
 xpack.security.enabled: false
 ```

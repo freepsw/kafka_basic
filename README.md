@@ -6,7 +6,7 @@
 ### Java 설치 및 JAVA_HOME 설정
 - 참고 링크 : https://www.linkedin.com/pulse/how-install-kafka-centos-aimasterlive-xp0xc/
 ```
-> sudo dnf install java-17-openjdk java-17-openjdk-devel
+> sudo dnf install -y java-17-openjdk java-17-openjdk-devel
 
 > java --version
 openjdk version "17.0.6" 2023-01-17 LTS
