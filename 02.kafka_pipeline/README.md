@@ -33,7 +33,7 @@
 network.host: 0.0.0.0   #(":" 다음에 스페이스를 추가해야 함.)
 
 # Master Node의 후보 서버 목록을 적어준다. (여기서는 1대 이므로 본인의 IP만)
-cluster.initial_master_nodes: ["서버이름"]
+cluster.initial_master_nodes: ["서버내부 IP"]
 
 # kibana에서 보안정책 없이 접근 가능하도록 "false"로 변경
 xpack.security.enabled: false
@@ -108,6 +108,7 @@ vm.max_map_count = 262144
 ```
 
 #### Check elasticsearch is running
+#### 보안 설정이 Enable 된 경우 (xpack.security.enabled: true)
 - Console을 이용한 접근
 ```
 > export ELASTIC_PASSWORD="ZG73I6D*OjUTT06oqZ4h"
@@ -141,6 +142,17 @@ Enter host password for user 'elastic': ZG73I6D*OjUTT06oqZ4h
   - 팝업 창에서 user/password를 elastid/위에서 저장한 password 로 입력
   - web에서 elasticsearch 정보 확인
 
+
+#### 보안 설정이 비활성화 된 경우 (xpack.security.enabled: false)
+- http로 접속하여 확인 가능 (https는 동작하지 않음)
+```
+ curl http://localhost:9200
+{
+  "name" : "instance-20240707-225918",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "EUPj1C72TYezJVE3VYeM_w",
+
+```
 
 
 ### 2) Install and run a kibana 
