@@ -55,7 +55,7 @@ Maven home: /opt/apache-maven-3.9.6
 ## Run kafka console consumer & producer 
 ```
 ## topic을 생성하지 않았다면, 아래와 같이 생성한다. 
-> cd $KAFKA_HOME
+> cd ~/apps/kafka_2.12-3.6.2
 > bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 2 --topic my_topic
 > bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 __consumer_offsets
@@ -67,7 +67,7 @@ my_topic
 ### Run a consumer 
 - 확인을 위한 consumer 먼저 실행
 ```
-> cd ~/apps/kafka_org/kafka_2.12-3.6.2
+> cd ~/apps/kafka_2.12-3.6.2
 > bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic my_topic \
 --property print.key=true \
 --property key.separator="-" \
@@ -105,7 +105,7 @@ Record written to offset 16 timestamp 1720231716066
 ### Run Producer 
 - Consumer로 데이터를 전송하기 위한 producer 실행 
 ```
-> cd ~/apps/kafka_org/kafka_2.12-3.6.2
+> cd ~/apps/kafka_2.12-3.6.2
 > bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic my_topic \
 --property "parse.key=true" \
 --property "key.separator=:" \

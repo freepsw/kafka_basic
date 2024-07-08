@@ -419,3 +419,63 @@ output {
 ### Kibana Web Browser에서 접속하여 데이터 확인
 - http://vm-instance-ip:5601 
 
+
+
+### [ETC]
+
+#### Elasticsearch Error 
+```
+master not discovered yet, this node has not previously joined a bootstrapped cluster, and this node must discover master-eligible nodes [kafka-demo] to bootstrap a cluster
+```
+
+```
+> sudo netstat -lntup
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 0.0.0.0:5601            0.0.0.0:*               LISTEN      4919/bin/../node/bi
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1436/sshd: /usr/sbi
+tcp6       0      0 :::2181                 :::*                    LISTEN      1517/java
+tcp6       0      0 :::35309                :::*                    LISTEN      1517/java
+tcp6       0      0 :::22                   :::*                    LISTEN      1436/sshd: /usr/sbi
+tcp6       0      0 :::33043                :::*                    LISTEN      1960/java
+tcp6       0      0 :::9300                 :::*                    LISTEN      4797/java
+tcp6       0      0 :::9092                 :::*                    LISTEN      1960/java
+tcp6       0      0 :::9200                 :::*                    LISTEN      4797/java
+udp        0      0 127.0.0.1:323           0.0.0.0:*                           707/chronyd
+udp6       0      0 ::1:323                 :::*                                707/chronyd
+
+
+> sudo netstat -lntup | grep "java"
+tcp6       0      0 :::2181                 :::*                    LISTEN      1517/java
+tcp6       0      0 :::35309                :::*                    LISTEN      1517/java
+tcp6       0      0 :::33043                :::*                    LISTEN      1960/java
+tcp6       0      0 :::9300                 :::*                    LISTEN      4797/java
+tcp6       0      0 :::9092                 :::*                    LISTEN      1960/java
+tcp6       0      0 :::9200                 :::*                    LISTEN      4797/java
+
+> sudo netstat -lntup | grep ":9300"
+tcp6       0      0 :::9300                 :::*                    LISTEN      4797/java
+
+
+> sudo dnf install -y lsof
+```
+
+
+```
+> sudo ss -ltnp
+State                Recv-Q               Send-Q                             Local Address:Port                              Peer Address:Port               Process
+LISTEN               0                    511                                      0.0.0.0:5601                                   0.0.0.0:*                   users:(("node",pid=4919,fd=21))
+LISTEN               0                    128                                      0.0.0.0:22                                     0.0.0.0:*                   users:(("sshd",pid=1436,fd=3))
+LISTEN               0                    50                                             *:2181                                         *:*                   users:(("java",pid=1517,fd=135))
+LISTEN               0                    50                                             *:35309                                        *:*                   users:(("java",pid=1517,fd=123))
+LISTEN               0                    128                                         [::]:22                                        [::]:*                   users:(("sshd",pid=1436,fd=4))
+LISTEN               0                    50                                             *:33043                                        *:*                   users:(("java",pid=1960,fd=123))
+LISTEN               0                    4096                                           *:9300                                         *:*                   users:(("java",pid=4797,fd=455))
+LISTEN               0                    50                                             *:9092                                         *:*                   users:(("java",pid=1960,fd=207))
+LISTEN               0                    4096                                           *:9200                                         *:*                   users:(("java",pid=4797,fd=460))
+
+> ps -ef | grep "4797"
+freepsw+    4797    4736  3 02:03 pts/2    00:03:00 /home/freepsw18/apps/elasticsearch-8.14.1/jdk/bin/java -Des.networkaddress.cache.ttl=60 -Des.networkaddress.cache.negative.ttl=10 -Djava.security.manager=allow -XX:+AlwaysPreTouch -Xss1m -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Djna.nosys=true -XX:-OmitStackTraceInFastThrow -Dio.netty.noUnsafe=true -Dio.netty.noKeySetOptimization=true -Dio.netty.recycler.maxCapacityPerThread=0 -Dlog4j.shutdownHookEnabled=false -Dlog4j2.disable.jmx=true -Dlog4j2.formatMsgNoLookups=true -Djava.locale.providers=SPI,COMPAT --add-opens=java.base/java.io=org.elasticsearch.preallocate --add-opens=org.apache.lucene.core/org.apache.lucene.store=org.elasticsearch.vec --enable-native-access=org.elasticsearch.nativeaccess -XX:ReplayDataFile=logs/replay_pid%p.log -Djava.library.path=/home/freepsw18/apps/elasticsearch-8.14.1/lib/platform/linux-x64:/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib -Djna.library.path=/home/freepsw18/apps/elasticsearch-8.14.1/lib/platform/linux-x64:/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib -Des.distribution.type=tar -XX:+UnlockDiagnosticVMOptions -XX:G1NumCollectionsKeepPinned=10000000 -XX:+UseG1GC -Djava.io.tmpdir=/tmp/elasticsearch-3652521130359830057 --add-modules=jdk.incubator.vector -XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError -XX:HeapDumpPath=data -XX:ErrorFile=logs/hs_err_pid%p.log -Xlog:gc*,gc+age=trace,safepoint:file=logs/gc.log:utctime,level,pid,tags:filecount=32,filesize=64m -Xms15918m -Xmx15918m -XX:MaxDirectMemorySize=8346664960 -XX:InitiatingHeapOccupancyPercent=30 -XX:G1ReservePercent=25 --module-path /home/freepsw18/apps/elasticsearch-8.14.1/lib --add-modules=jdk.net --add-modules=ALL-MODULE-PATH -m org.elasticsearch.server/org.elasticsearch.bootstrap.Elasticsearch
+freepsw+    4825    4797  0 02:03 pts/2    00:00:00 /home/freepsw18/apps/elasticsearch-8.14.1/modules/x-pack-ml/platform/linux-x86_64/bin/controller
+
+```
